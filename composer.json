@@ -1,0 +1,41 @@
+{
+    "name": "quanta/http-endpoint",
+    "type": "library",
+    "description": "Minimalist library to create Psr-15 request handlers",
+    "keywords": [
+        "psr-15",
+        "middleware",
+        "request-handler"
+    ],
+    "license": "MIT",
+    "homepage": "https://github.com/quantaphp/http-endpoint",
+    "support": {
+        "issues": "https://github.com/quantaphp/http-endpoint/issues",
+        "source": "https://github.com/quantaphp/http-endpoint"
+    },
+    "authors": [
+        {
+            "name": "pmall",
+            "email": "pierre.mallinjoud@gmail.com"
+        }
+    ],
+    "config": {
+        "sort-packages": true
+    },
+    "require": {
+        "php": "^7.4",
+        "psr/http-message": "^1.0",
+        "psr/http-server-handler": "^1.0"
+    },
+    "require-dev": {
+        "eloquent/phony-kahlan": "^3.0",
+        "kahlan/kahlan": "^4.7",
+        "laminas/laminas-diactoros": "^2.3",
+        "phpstan/phpstan": "^0.12.25"
+    },
+    "autoload": {
+        "psr-4": {
+            "Quanta\\Http\\": "src"
+        }
+    }
+}
