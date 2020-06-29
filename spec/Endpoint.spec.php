@@ -7,9 +7,54 @@ use function Eloquent\Phony\Kahlan\mock;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 use Quanta\Http\Endpoint;
+use Quanta\Http\Responder;
+
+describe('Endpoint::factory()', function () {
+
+    beforeEach(function () {
+        $this->factory = mock(ResponseFactoryInterface::class);
+        $this->f = stub();
+    });
+
+    context('when no key and metadata are given', function () {
+
+        it('should return a factory producing an Entrypoint with the default responder', function () {
+            $factory = Endpoint::factory($this->factory->get());
+
+            $test = $factory($this->f);
+
+            expect($test)->toEqual(new Endpoint(
+                new Responder($this->factory->get()),
+                $this->f,
+                'data',
+                [],
+            ));
+        });
+
+    });
+
+    context('when key and metadata are given', function () {
+
+        it('should return a factory producing an Entrypoint with the default responder, the given key and metadata', function () {
+            $factory = Endpoint::factory($this->factory->get(), 'key', ['m' => 'v']);
+
+            $test = $factory($this->f);
+
+            expect($test)->toEqual(new Endpoint(
+                new Responder($this->factory->get()),
+                $this->f,
+                'key',
+                ['m' => 'v'],
+            ));
+        });
+
+    });
+
+});
 
 describe('Endpoint', function () {
 
@@ -20,7 +65,7 @@ describe('Endpoint', function () {
 
     });
 
-    context('when there is no key and metadata', function () {
+    context('when no key and metadata are given', function () {
 
         beforeEach(function () {
 
@@ -239,7 +284,7 @@ describe('Endpoint', function () {
 
     });
 
-    context('when there is a key and metadata', function () {
+    context('when key and metadata are given', function () {
 
         beforeEach(function () {
 

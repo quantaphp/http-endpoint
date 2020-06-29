@@ -6,6 +6,7 @@ namespace Quanta\Http;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 final class Endpoint implements RequestHandlerInterface
@@ -23,12 +24,25 @@ final class Endpoint implements RequestHandlerInterface
     /**
      * @var string
      */
-    private $key;
+    private string $key;
 
     /**
      * @var array<string, mixed>
      */
-    private $metadata;
+    private array $metadata;
+
+    /**
+     * @param \Psr\Http\Message\ResponseFactoryInterface    $factory
+     * @param string                                        $key
+     * @param array<string, mixed>                          $metadata
+     * @return callable(callable(): mixed): \Quanta\Http\Endpoint
+     */
+    public static function factory(ResponseFactoryInterface $factory, string $key = 'data', array $metadata = []): callable
+    {
+        $responder = new Responder($factory);
+
+        return fn (callable $f) => new self($responder, $f, $key, $metadata);
+    }
 
     /**
      * @param callable(int, mixed): \Psr\Http\Message\ResponseInterface                                             $responder
