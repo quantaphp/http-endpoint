@@ -6,18 +6,27 @@ namespace Quanta\Http;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 final class Endpoint implements RequestHandlerInterface
 {
     /**
-     * @var callable(int, mixed = ''): \Psr\Http\Message\ResponseInterface
+     * @var string
      */
-    private $responder;
+    public const DEFAULT_KEY = 'data';
 
     /**
-     * @var callable(ServerRequestInterface, callable(int, mixed): \Psr\Http\Message\ResponseInterface): mixed
+     * @var array<string, mixed>
+     */
+    public const DEFAULT_METADATA = [];
+
+    /**
+     * @var \Quanta\Http\ResponderInterface
+     */
+    private ResponderInterface $responder;
+
+    /**
+     * @var callable(\Psr\Http\Message\ServerRequestInterface, \Quanta\Http\ResponderInterface): mixed
      */
     private $f;
 
@@ -32,26 +41,17 @@ final class Endpoint implements RequestHandlerInterface
     private array $metadata;
 
     /**
-     * @param \Psr\Http\Message\ResponseFactoryInterface    $factory
-     * @param string                                        $key
-     * @param array<string, mixed>                          $metadata
-     * @return callable(callable(): mixed): \Quanta\Http\Endpoint
+     * @param \Quanta\Http\ResponderInterface                                                               $responder
+     * @param callable(\Psr\Http\Message\ServerRequestInterface, \Quanta\Http\ResponderInterface): mixed    $f
+     * @param string                                                                                        $key
+     * @param array<string, mixed>                                                                          $metadata
      */
-    public static function factory(ResponseFactoryInterface $factory, string $key = 'data', array $metadata = []): callable
-    {
-        $responder = new Responder($factory);
-
-        return fn (callable $f) => new self($responder, $f, $key, $metadata);
-    }
-
-    /**
-     * @param callable(int, mixed): \Psr\Http\Message\ResponseInterface                                             $responder
-     * @param callable(ServerRequestInterface, callable(int, mixed): \Psr\Http\Message\ResponseInterface): mixed    $f
-     * @param string                                                                                                $key
-     * @param array<string, mixed>                                                                                  $metadata
-     */
-    public function __construct(callable $responder, callable $f, string $key = 'data', array $metadata = [])
-    {
+    public function __construct(
+        ResponderInterface $responder,
+        callable $f,
+        string $key = self::DEFAULT_KEY,
+        array $metadata = self::DEFAULT_METADATA
+    ) {
         $this->responder = $responder;
         $this->f = $f;
         $this->key = $key;

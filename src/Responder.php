@@ -7,7 +7,7 @@ namespace Quanta\Http;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 
-final class Responder
+final class Responder implements ResponderInterface
 {
     /**
      * @var \Psr\Http\Message\ResponseFactoryInterface

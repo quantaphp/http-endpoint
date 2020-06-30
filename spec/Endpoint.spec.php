@@ -7,60 +7,16 @@ use function Eloquent\Phony\Kahlan\mock;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 use Quanta\Http\Endpoint;
-use Quanta\Http\Responder;
-
-describe('Endpoint::factory()', function () {
-
-    beforeEach(function () {
-        $this->factory = mock(ResponseFactoryInterface::class);
-        $this->f = stub();
-    });
-
-    context('when no key and metadata are given', function () {
-
-        it('should return a factory producing an Entrypoint with the default responder', function () {
-            $factory = Endpoint::factory($this->factory->get());
-
-            $test = $factory($this->f);
-
-            expect($test)->toEqual(new Endpoint(
-                new Responder($this->factory->get()),
-                $this->f,
-                'data',
-                [],
-            ));
-        });
-
-    });
-
-    context('when key and metadata are given', function () {
-
-        it('should return a factory producing an Entrypoint with the default responder, the given key and metadata', function () {
-            $factory = Endpoint::factory($this->factory->get(), 'key', ['m' => 'v']);
-
-            $test = $factory($this->f);
-
-            expect($test)->toEqual(new Endpoint(
-                new Responder($this->factory->get()),
-                $this->f,
-                'key',
-                ['m' => 'v'],
-            ));
-        });
-
-    });
-
-});
+use Quanta\Http\ResponderInterface;
 
 describe('Endpoint', function () {
 
     beforeEach(function () {
 
-        $this->responder = stub();
+        $this->responder = mock(ResponderInterface::class);
         $this->f = stub();
 
     });
@@ -70,7 +26,7 @@ describe('Endpoint', function () {
         beforeEach(function () {
 
             $this->handler = new Endpoint(
-                $this->responder,
+                $this->responder->get(),
                 $this->f,
             );
 
@@ -97,7 +53,9 @@ describe('Endpoint', function () {
 
                     $this->f->with($this->request, $this->responder)->returns(true);
 
-                    $this->responder->with(200, ['data' => true])->returns($this->response);
+                    $this->responder->__invoke
+                        ->with(200, [Endpoint::DEFAULT_KEY => true])
+                        ->returns($this->response);
 
                     $test = $this->handler->handle($this->request->get());
 
@@ -113,7 +71,9 @@ describe('Endpoint', function () {
 
                     $this->f->with($this->request, $this->responder)->returns(false);
 
-                    $this->responder->with(404)->returns($this->response);
+                    $this->responder->__invoke
+                        ->with(404)
+                        ->returns($this->response);
 
                     $test = $this->handler->handle($this->request->get());
 
@@ -129,7 +89,9 @@ describe('Endpoint', function () {
 
                     $this->f->with($this->request, $this->responder)->returns(1);
 
-                    $this->responder->with(200, ['data' => 1])->returns($this->response);
+                    $this->responder->__invoke
+                        ->with(200, [Endpoint::DEFAULT_KEY => 1])
+                        ->returns($this->response);
 
                     $test = $this->handler->handle($this->request->get());
 
@@ -145,7 +107,9 @@ describe('Endpoint', function () {
 
                     $this->f->with($this->request, $this->responder)->returns(1.1);
 
-                    $this->responder->with(200, ['data' => 1.1])->returns($this->response);
+                    $this->responder->__invoke
+                        ->with(200, [Endpoint::DEFAULT_KEY => 1.1])
+                        ->returns($this->response);
 
                     $test = $this->handler->handle($this->request->get());
 
@@ -161,7 +125,9 @@ describe('Endpoint', function () {
 
                     $this->f->with($this->request, $this->responder)->returns('test');
 
-                    $this->responder->with(200, 'test')->returns($this->response);
+                    $this->responder->__invoke
+                        ->with(200, 'test')
+                        ->returns($this->response);
 
                     $test = $this->handler->handle($this->request->get());
 
@@ -179,7 +145,9 @@ describe('Endpoint', function () {
 
                     $this->f->with($this->request, $this->responder)->returns($data);
 
-                    $this->responder->with(200, ['data' => $data])->returns($this->response);
+                    $this->responder->__invoke
+                        ->with(200, [Endpoint::DEFAULT_KEY => $data])
+                        ->returns($this->response);
 
                     $test = $this->handler->handle($this->request->get());
 
@@ -213,7 +181,9 @@ describe('Endpoint', function () {
 
                         $this->f->with($this->request, $this->responder)->returns(new ArrayIterator($data));
 
-                        $this->responder->with(200, ['data' => $data])->returns($this->response);
+                        $this->responder->__invoke
+                            ->with(200, [Endpoint::DEFAULT_KEY => $data])
+                            ->returns($this->response);
 
                         $test = $this->handler->handle($this->request->get());
 
@@ -234,7 +204,9 @@ describe('Endpoint', function () {
 
                         $this->f->with($this->request, $this->responder)->returns($data);
 
-                        $this->responder->with(200, ['data' => $data])->returns($this->response);
+                        $this->responder->__invoke
+                            ->with(200, [Endpoint::DEFAULT_KEY => $data])
+                            ->returns($this->response);
 
                         $test = $this->handler->handle($this->request->get());
 
@@ -254,7 +226,9 @@ describe('Endpoint', function () {
 
                     $this->f->with($this->request, $this->responder)->returns($data);
 
-                    $this->responder->with(200, ['data' => $data])->returns($this->response);
+                    $this->responder->__invoke
+                        ->with(200, [Endpoint::DEFAULT_KEY => $data])
+                        ->returns($this->response);
 
                     $test = $this->handler->handle($this->request->get());
 
@@ -270,7 +244,9 @@ describe('Endpoint', function () {
 
                     $this->f->with($this->request, $this->responder)->returns(null);
 
-                    $this->responder->with(200)->returns($this->response);
+                    $this->responder->__invoke
+                        ->with(200)
+                        ->returns($this->response);
 
                     $test = $this->handler->handle($this->request->get());
 
@@ -289,7 +265,7 @@ describe('Endpoint', function () {
         beforeEach(function () {
 
             $this->handler = new Endpoint(
-                $this->responder,
+                $this->responder->get(),
                 $this->f,
                 'key',
                 ['m' => 'v'],
@@ -318,7 +294,9 @@ describe('Endpoint', function () {
 
                     $this->f->with($this->request, $this->responder)->returns(true);
 
-                    $this->responder->with(200, ['m' =>'v', 'key' => true])->returns($this->response);
+                    $this->responder->__invoke
+                        ->with(200, ['m' =>'v', 'key' => true])
+                        ->returns($this->response);
 
                     $test = $this->handler->handle($this->request->get());
 
@@ -334,7 +312,9 @@ describe('Endpoint', function () {
 
                     $this->f->with($this->request, $this->responder)->returns(false);
 
-                    $this->responder->with(404)->returns($this->response);
+                    $this->responder->__invoke
+                        ->with(404)
+                        ->returns($this->response);
 
                     $test = $this->handler->handle($this->request->get());
 
@@ -350,7 +330,9 @@ describe('Endpoint', function () {
 
                     $this->f->with($this->request, $this->responder)->returns(1);
 
-                    $this->responder->with(200, ['m' =>'v', 'key' => 1])->returns($this->response);
+                    $this->responder->__invoke
+                        ->with(200, ['m' =>'v', 'key' => 1])
+                        ->returns($this->response);
 
                     $test = $this->handler->handle($this->request->get());
 
@@ -366,7 +348,9 @@ describe('Endpoint', function () {
 
                     $this->f->with($this->request, $this->responder)->returns(1.1);
 
-                    $this->responder->with(200, ['m' =>'v', 'key' => 1.1])->returns($this->response);
+                    $this->responder->__invoke
+                        ->with(200, ['m' =>'v', 'key' => 1.1])
+                        ->returns($this->response);
 
                     $test = $this->handler->handle($this->request->get());
 
@@ -382,7 +366,9 @@ describe('Endpoint', function () {
 
                     $this->f->with($this->request, $this->responder)->returns('test');
 
-                    $this->responder->with(200, 'test')->returns($this->response);
+                    $this->responder->__invoke
+                        ->with(200, 'test')
+                        ->returns($this->response);
 
                     $test = $this->handler->handle($this->request->get());
 
@@ -400,7 +386,9 @@ describe('Endpoint', function () {
 
                     $this->f->with($this->request, $this->responder)->returns($data);
 
-                    $this->responder->with(200, ['m' =>'v', 'key' => $data])->returns($this->response);
+                    $this->responder->__invoke
+                        ->with(200, ['m' =>'v', 'key' => $data])
+                        ->returns($this->response);
 
                     $test = $this->handler->handle($this->request->get());
 
@@ -434,7 +422,9 @@ describe('Endpoint', function () {
 
                         $this->f->with($this->request, $this->responder)->returns(new ArrayIterator($data));
 
-                        $this->responder->with(200, ['m' =>'v', 'key' => $data])->returns($this->response);
+                        $this->responder->__invoke
+                            ->with(200, ['m' =>'v', 'key' => $data])
+                            ->returns($this->response);
 
                         $test = $this->handler->handle($this->request->get());
 
@@ -455,7 +445,9 @@ describe('Endpoint', function () {
 
                         $this->f->with($this->request, $this->responder)->returns($data);
 
-                        $this->responder->with(200, ['m' =>'v', 'key' => $data])->returns($this->response);
+                        $this->responder->__invoke
+                            ->with(200, ['m' =>'v', 'key' => $data])
+                            ->returns($this->response);
 
                         $test = $this->handler->handle($this->request->get());
 
@@ -475,7 +467,9 @@ describe('Endpoint', function () {
 
                     $this->f->with($this->request, $this->responder)->returns($data);
 
-                    $this->responder->with(200, ['m' =>'v', 'key' => $data])->returns($this->response);
+                    $this->responder->__invoke
+                        ->with(200, ['m' =>'v', 'key' => $data])
+                        ->returns($this->response);
 
                     $test = $this->handler->handle($this->request->get());
 
@@ -491,7 +485,9 @@ describe('Endpoint', function () {
 
                     $this->f->with($this->request, $this->responder)->returns(null);
 
-                    $this->responder->with(200)->returns($this->response);
+                    $this->responder->__invoke
+                        ->with(200)
+                        ->returns($this->response);
 
                     $test = $this->handler->handle($this->request->get());
 

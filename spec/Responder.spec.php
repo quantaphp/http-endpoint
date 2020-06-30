@@ -7,11 +7,16 @@ use Psr\Http\Message\ResponseInterface;
 use Laminas\Diactoros\ResponseFactory;
 
 use Quanta\Http\Responder;
+use Quanta\Http\ResponderInterface;
 
 describe('Responder', function () {
 
     beforeEach(function () {
         $this->responder = new Responder(new ResponseFactory);
+    });
+
+    it('should implement ResponderInterface', function () {
+        expect($this->responder)->toBeAnInstanceOf(ResponderInterface::class);
     });
 
     describe('->__invoke()', function () {
