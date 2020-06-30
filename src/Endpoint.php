@@ -18,7 +18,7 @@ final class Endpoint implements RequestHandlerInterface
     /**
      * @var array<string, mixed>
      */
-    public const DEFAULT_METADATA = [];
+    public const DEFAULT_METADATA = ['code' => 200, 'success' => true];
 
     /**
      * @var \Quanta\Http\ResponderInterface

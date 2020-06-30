@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use function Eloquent\Phony\Kahlan\stub;
 use function Eloquent\Phony\Kahlan\mock;
 
 use Psr\Http\Message\ResponseFactoryInterface;
@@ -61,7 +60,7 @@ describe('EndpointFactory', function () {
         describe('->__invoke()', function () {
 
             it('should return an Endpoint using the given callable, the responder, default key and metadata', function () {
-                $f = stub();
+                $f = fn () => 1;
 
                 $test = ($this->factory)($f);
 
@@ -84,7 +83,7 @@ describe('EndpointFactory', function () {
         describe('->__invoke()', function () {
 
             it('should return an Endpoint using the given callable, the responder, the key and metadata', function () {
-                $f = stub();
+                $f = fn () => 1;
 
                 $test = ($this->factory)($f);
 
