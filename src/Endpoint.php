@@ -21,12 +21,12 @@ final class Endpoint implements RequestHandlerInterface
     public const DEFAULT_METADATA = ['code' => 200, 'success' => true];
 
     /**
-     * @var \Quanta\Http\ResponderInterface
+     * @var callable(int, string|mixed[]): \Psr\Http\Message\ResponseInterface
      */
-    private ResponderInterface $responder;
+    private $responder;
 
     /**
-     * @var callable(\Psr\Http\Message\ServerRequestInterface, \Quanta\Http\ResponderInterface): mixed
+     * @var callable(\Psr\Http\Message\ServerRequestInterface, callable): mixed
      */
     private $f;
 
@@ -41,17 +41,13 @@ final class Endpoint implements RequestHandlerInterface
     private array $metadata;
 
     /**
-     * @param \Quanta\Http\ResponderInterface                                                               $responder
-     * @param callable(\Psr\Http\Message\ServerRequestInterface, \Quanta\Http\ResponderInterface): mixed    $f
-     * @param string                                                                                        $key
-     * @param array<string, mixed>                                                                          $metadata
+     * @param callable(int, string|mixed[]): \Psr\Http\Message\ResponseInterface    $responder
+     * @param callable(\Psr\Http\Message\ServerRequestInterface, callable): mixed   $f
+     * @param string                                                                $key
+     * @param array<string, mixed>                                                  $metadata
      */
-    public function __construct(
-        ResponderInterface $responder,
-        callable $f,
-        string $key = self::DEFAULT_KEY,
-        array $metadata = self::DEFAULT_METADATA
-    ) {
+    public function __construct(callable $responder, callable $f, string $key = self::DEFAULT_KEY, array $metadata = self::DEFAULT_METADATA)
+    {
         $this->responder = $responder;
         $this->f = $f;
         $this->key = $key;
@@ -66,11 +62,11 @@ final class Endpoint implements RequestHandlerInterface
         $result = ($this->f)($request, $this->responder);
 
         if (is_null($result)) {
-            return ($this->responder)(200);
+            return ($this->responder)(200, '');
         }
 
         if ($result === false) {
-            return ($this->responder)(404);
+            return ($this->responder)(404, '');
         }
 
         if (is_string($result)) {

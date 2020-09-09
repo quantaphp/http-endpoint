@@ -31,7 +31,6 @@
     "require-dev": {
         "eloquent/phony-kahlan": "^3.0",
         "kahlan/kahlan": "^4.7",
-        "laminas/laminas-diactoros": "^2.3",
         "phpstan/phpstan": "^0.12.25"
     },
     "autoload": {
