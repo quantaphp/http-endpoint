@@ -26,7 +26,7 @@ final class Endpoint implements RequestHandlerInterface
     private $responder;
 
     /**
-     * @var callable(\Psr\Http\Message\ServerRequestInterface, callable): mixed
+     * @var callable(callable, callable): mixed
      */
     private $f;
 
@@ -42,7 +42,7 @@ final class Endpoint implements RequestHandlerInterface
 
     /**
      * @param callable(int, string|mixed[]): \Psr\Http\Message\ResponseInterface    $responder
-     * @param callable(\Psr\Http\Message\ServerRequestInterface, callable): mixed   $f
+     * @param callable(callable, callable): mixed                                   $f
      * @param string                                                                $key
      * @param array<string, mixed>                                                  $metadata
      */
@@ -59,7 +59,7 @@ final class Endpoint implements RequestHandlerInterface
      */
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $result = ($this->f)($request, $this->responder);
+        $result = ($this->f)(new Input($request), $this->responder);
 
         if (is_null($result)) {
             return ($this->responder)(200, '');
