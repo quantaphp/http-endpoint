@@ -23,14 +23,14 @@
         "sort-packages": true
     },
     "require": {
-        "php": "^7.4",
+        "php": ">=7.4",
         "psr/http-factory": "^1.0",
         "psr/http-message": "^1.0",
         "psr/http-server-handler": "^1.0"
     },
     "require-dev": {
-        "eloquent/phony-kahlan": "^3.0",
-        "kahlan/kahlan": "^4.7",
+        "eloquent/phony-kahlan": "^4.0",
+        "kahlan/kahlan": "^5.0",
         "phpstan/phpstan": "^0.12.25"
     },
     "autoload": {
