@@ -6,24 +6,15 @@ namespace Quanta\Http;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 final class Endpoint implements RequestHandlerInterface
 {
     /**
-     * @var string
+     * @var \Psr\Http\Message\ResponseFactoryInterface
      */
-    public const DEFAULT_KEY = 'data';
-
-    /**
-     * @var array<string, mixed>
-     */
-    public const DEFAULT_METADATA = ['code' => 200, 'success' => true];
-
-    /**
-     * @var callable(int, string|mixed[]): \Psr\Http\Message\ResponseInterface
-     */
-    private $responder;
+    private $factory;
 
     /**
      * @var callable(callable, callable): mixed
@@ -31,27 +22,20 @@ final class Endpoint implements RequestHandlerInterface
     private $f;
 
     /**
-     * @var string
+     * @var null|callable(mixed): string
      */
-    private string $key;
+    private $serializer;
 
     /**
-     * @var array<string, mixed>
+     * @param \Psr\Http\Message\ResponseFactoryInterface    $factory
+     * @param callable(callable, callable): mixed           $f
+     * @param callable                                      $serializer
      */
-    private array $metadata;
-
-    /**
-     * @param callable(int, string|mixed[]): \Psr\Http\Message\ResponseInterface    $responder
-     * @param callable(callable, callable): mixed                                   $f
-     * @param string                                                                $key
-     * @param array<string, mixed>                                                  $metadata
-     */
-    public function __construct(callable $responder, callable $f, string $key = self::DEFAULT_KEY, array $metadata = self::DEFAULT_METADATA)
+    public function __construct(ResponseFactoryInterface $factory, callable $f, callable $serializer = null)
     {
-        $this->responder = $responder;
+        $this->factory = $factory;
         $this->f = $f;
-        $this->key = $key;
-        $this->metadata = $metadata;
+        $this->serializer = $serializer;
     }
 
     /**
@@ -59,30 +43,110 @@ final class Endpoint implements RequestHandlerInterface
      */
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $result = ($this->f)(new Input($request), $this->responder);
+        $value = ($this->f)(new Input($request), [$this->factory, 'createResponse']);
 
-        if (is_null($result)) {
-            return ($this->responder)(200, '');
+        if (is_null($value)) {
+            return $this->factory->createResponse(404);
         }
 
-        if ($result === false) {
-            return ($this->responder)(404, '');
+        if (is_string($value)) {
+            return $this->html($value);
         }
 
-        if (is_string($result)) {
-            return ($this->responder)(200, $result);
+        if  (is_array($value)) {
+            return $this->json($value);
         }
 
-        if ($result instanceof ResponseInterface) {
-            return $result;
+        return $value instanceof ResponseInterface ? $value : $this->json($value);
+    }
+
+    /**
+     * @param string $contents
+     * @return \Psr\Http\Message\ResponseInterface
+     */
+    private function html(string $contents): ResponseInterface
+    {
+        $response = $this->factory->createResponse(200);
+
+        $response->getBody()->write($contents);
+
+        return $response->withHeader('content-type', 'text/html');
+    }
+
+    /**
+     * @param mixed $value
+     * @return \Psr\Http\Message\ResponseInterface
+     */
+    private function json($value): ResponseInterface
+    {
+        $contents = $this->serialize($value);
+
+        $response = $this->factory->createResponse(200);
+
+        $response->getBody()->write($contents);
+
+        return $response->withHeader('content-type', 'application/json');
+    }
+
+    /**
+     * @param mixed $value
+     * @return string
+     * @throws \Exception
+     * @throws \LogicException
+     * @throws \UnexpectedValueException
+     */
+    private function serialize($value): string
+    {
+        // Default error message wrapper.
+        $err = 'Error while serializing the response contents as json';
+
+        // default serializer.
+        if (is_null($this->serializer)) {
+            try {
+                return json_encode($value, JSON_THROW_ON_ERROR);
+            }
+
+            catch (\Throwable $e) {
+                throw new \Exception($err, 0, $e);
+            }
         }
 
-        $data = array_merge($this->metadata, [
-            $this->key => $result instanceof \Traversable
-                ? iterator_to_array($result)
-                : $result,
-        ]);
+        // custom serializer.
+        try {
+            $contents = ($this->serializer)($value);
+        }
 
-        return ($this->responder)(200, $data);
+        catch (\ArgumentCountError $e) {
+            throw new \LogicException('The json serializer must expect only one argument', 0, $e);
+        }
+
+        catch (\TypeError $e) {
+            $serializer = \Closure::fromCallable($this->serializer);
+
+            $reflection = new \ReflectionFunction($serializer);
+
+            $parameters = $reflection->getParameters();
+
+            /** @var \ReflectionNamedType|null */
+            $type = $parameters[0]->getType();
+
+            if (is_null($type) || $type->getName() == 'mixed') {
+                throw new \Exception($err, 0, $e);
+            }
+
+            throw new \LogicException('The first argument of the json serializer must accept any type', 0, $e);
+        }
+
+        catch (\Throwable $e) {
+            throw new \Exception($err, 0, $e);
+        }
+
+        if (!is_string($contents)) {
+            throw new \UnexpectedValueException(
+                sprintf('The json serializer must return a string, %s returned', gettype($contents))
+            );
+        }
+
+        return $contents;
     }
 }

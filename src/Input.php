@@ -8,8 +8,14 @@ use Psr\Http\Message\ServerRequestInterface;
 
 final class Input
 {
+    /**
+     * @var \Psr\Http\Message\ServerRequestInterface
+     */
     private ServerRequestInterface $request;
 
+    /**
+     * @param \Psr\Http\Message\ServerRequestInterface $request
+     */
     public function __construct(ServerRequestInterface $request)
     {
         $this->request = $request;
@@ -19,6 +25,7 @@ final class Input
      * @param string    $key
      * @param mixed     ...$xs
      * @return mixed
+     * @throws \Exception
      */
     public function __invoke(string $key = '', ...$xs)
     {
